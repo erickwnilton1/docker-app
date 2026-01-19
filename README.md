@@ -2,8 +2,6 @@
 
 Uma aplicação para aprender os conceitos fundamentais de Docker, containerização e como empacotar aplicações Node.js em imagens Docker.
 
----
-
 ## Índice
 
 - [O que é Docker?](#o-que-é-docker)
@@ -11,9 +9,9 @@ Uma aplicação para aprender os conceitos fundamentais de Docker, containeriza�
 - [Estrutura do Dockerfile](#estrutura-do-dockerfile)
 - [Como Usar](#como-usar)
 - [Comandos Essenciais](#comandos-essenciais)
+- [Versionamento e Docker Hub](#versionamento-e-docker-hub)
 - [Troubleshooting](#troubleshooting)
-
----
+- [Recursos Adicionais](#recursos-adicionais)
 
 ## O que é Docker?
 
@@ -24,8 +22,7 @@ Docker é uma plataforma de containerização que permite empacotar sua aplicaç
 - **Portabilidade**: Execute em qualquer máquina que tenha Docker instalado
 - **Isolamento**: Cada container é independente e isolado
 - **Eficiência**: Usa menos recursos que máquinas virtuais tradicionais
-
----
+- **Escalabilidade**: Facilita o deploy e gerenciamento de múltiplas instâncias
 
 ## Conceitos Principais
 
@@ -42,8 +39,6 @@ Um container é uma **instância em execução** de uma imagem Docker. É como u
 
 ### Dockerfile
 Um arquivo de texto que contém as instruções para construir uma imagem Docker. É como uma receita passo a passo.
-
----
 
 ## Estrutura do Dockerfile
 
@@ -120,11 +115,12 @@ CMD ["npm", "run", "dev"]
 
 ---
 
-## 🚀 Como Usar
+## Como Usar
 
 ### Pré-requisitos
-- Docker instalado em sua máquina
+- Docker instalado em sua máquina ([Baixar Docker](https://www.docker.com/products/docker-desktop))
 - Uma aplicação Node.js com `package.json`
+- Terminal/CMD aberto no diretório do projeto
 
 ### Passo 1: Construir a Imagem
 
@@ -135,6 +131,16 @@ docker build -t next-hello-world .
 **Explicação dos flags:**
 - `-t` : Define um nome (tag) para a imagem
 - `.` : Usa o Dockerfile do diretório atual
+
+**Saída esperada:**
+```
+[+] Building 45.2s (8/8) FINISHED
+ => [internal] load build definition from Dockerfile
+ => [1/7] FROM node:18-alpine
+ => [2/7] WORKDIR /app
+ ...
+ => => naming to docker.io/library/next-hello-world:latest
+```
 
 ### Passo 2: Executar o Container
 
@@ -166,6 +172,9 @@ docker build -t nome-da-imagem .
 
 # Build com múltiplas tags
 docker build -t nome-da-imagem:1.0 -t nome-da-imagem:latest .
+
+# Build com arquivo Dockerfile customizado
+docker build -f Dockerfile.prod -t nome-da-imagem:prod .
 ```
 
 ### Executar Container
@@ -181,6 +190,9 @@ docker run -d -p 3000:3000 nome-da-imagem
 
 # Com nome customizado
 docker run --name meu-container -p 3000:3000 nome-da-imagem
+
+# Com variáveis de ambiente
+docker run -e NODE_ENV=production -p 3000:3000 nome-da-imagem
 ```
 
 ### Listar Imagens
@@ -195,21 +207,39 @@ docker ps
 
 # Todos os containers (incluindo parados)
 docker ps -a
+
+# Últimos 5 containers
+docker ps -n 5
 ```
 
 ### Parar Container
 ```bash
 docker stop nome-ou-id-do-container
+
+# Parar todos os containers
+docker stop $(docker ps -q)
 ```
 
 ### Remover Container
 ```bash
 docker rm nome-ou-id-do-container
+
+# Remover container em execução
+docker rm -f nome-ou-id-do-container
+
+# Remover todos os containers parados
+docker container prune
 ```
 
 ### Remover Imagem
 ```bash
 docker rmi nome-da-imagem
+
+# Remover imagem mesmo se estiver em uso
+docker rmi -f nome-da-imagem
+
+# Remover todas as imagens não utilizadas
+docker image prune
 ```
 
 ### Ver Logs
@@ -220,39 +250,70 @@ docker logs nome-ou-id-do-container
 docker logs -f nome-ou-id-do-container
 ```
 
----
-
 ## Troubleshooting
 
 ### Erro: "Port 3000 is already allocated"
-**Solução:** Use uma porta diferente
+**Problema:** Outra aplicação está usando a porta 3000.
+
+**Solução 1:** Use uma porta diferente
 ```bash
 docker run -p 3001:3000 next-hello-world
 ```
 
+**Solução 2:** Parar o container que está usando a porta
+```bash
+# Encontrar qual container está usando a porta
+docker ps
+
+# Parar o container
+docker stop id-do-container
+```
+
 ### Erro: "Cannot find module"
-**Solução:** Certifique-se de que o `package.json` está no diretório raiz e execute `npm install` localmente também.
+**Problema:** Dependências não foram instaladas corretamente.
+
+**Solução:**
+```bash
+# Certifique-se de que o package.json está no diretório raiz
+# Reconstrua a imagem
+docker build --no-cache -t next-hello-world .
+```
 
 ### Container para imediatamente após iniciar
+**Problema:** Erro na aplicação ou comando inválido.
+
 **Solução:** Verifique os logs
 ```bash
 docker logs nome-do-container
+
+# Ver logs com mais detalhes
+docker logs -f nome-do-container
 ```
-
-### Erro: "docker: command not found"
-**Solução:** Docker não está instalado. Baixe em [docker.com](https://www.docker.com)
-
----
 
 ## Recursos Adicionais
 
 - [Documentação Oficial do Docker](https://docs.docker.com/)
 - [Docker Hub - Imagens Prontas](https://hub.docker.com/)
 - [Node.js Official Images](https://hub.docker.com/_/node)
-
----
+- [Best Practices for Writing Dockerfiles](https://docs.docker.com/develop/dev-best-practices/)
+- [Docker Compose Documentation](https://docs.docker.com/compose/)
 
 ## Dicas de Boas Práticas
 
-1. **Nomeie suas imagens**: Use nomes descritivos e versionamento
+1. **Nomeie suas imagens**: Use nomes descritivos e versionamento semântico
 2. **Teste localmente**: Sempre teste o container antes de fazer deploy
+3. **Use .dockerignore**: Exclua arquivos desnecessários (node_modules, .git, etc)
+4. **Mantenha imagens leves**: Use Alpine Linux quando possível
+5. **Não rode como root**: Configure um usuário não-root no Dockerfile
+6. **Use multi-stage builds**: Para reduzir o tamanho final da imagem
+7. **Documente suas imagens**: Adicione comentários no Dockerfile
+8. **Versione suas imagens**: Use tags para rastrear mudanças
+9. **Faça backup**: Sempre tenha suas imagens no Docker Hub
+10. **Atualize regularmente**: Mantenha as imagens base atualizadas
+
+## Suporte
+
+Se tiver dúvidas ou problemas:
+
+1. Consulte a [documentação oficial](https://docs.docker.com/)
+2. Procure no [Stack Overflow](https://stackoverflow.com/questions/tagged/docker)

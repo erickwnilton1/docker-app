@@ -46,9 +46,8 @@ Aqui estão os passos necessários para criar uma imagem Docker:
 
 ### **FROM** - Definir Imagem Base
 ```dockerfile
-FROM node:18-alpine
+FROM node:20
 ```
-Define a imagem base que será usada. Neste caso, usamos Node.js versão 18 em uma distribuição Alpine (mais leve).
 
 ### **WORKDIR** - Diretório de Trabalho
 ```dockerfile
@@ -58,7 +57,7 @@ Define o diretório de trabalho dentro do container. Todos os comandos subsequen
 
 ### **COPY** - Copiar package.json
 ```dockerfile
-COPY package.json .
+COPY package.json ./
 ```
 Copia o arquivo `package.json` do seu computador para dentro do container.
 
@@ -92,13 +91,13 @@ Define o comando que será executado quando o container iniciar.
 
 ```dockerfile
 # 1. Definir imagem base
-FROM node:18-alpine
+FROM node:20
 
 # 2. Definir diretório de trabalho
 WORKDIR /app
 
 # 3. Copiar package.json
-COPY package.json .
+COPY package.json ./
 
 # 4. Instalar dependências
 RUN npm install
